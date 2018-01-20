@@ -1,6 +1,7 @@
 import battlecode as bc
 import random
 import sys
+import math
 import traceback
 import time
 
@@ -36,6 +37,9 @@ while True:
     units = gc.my_units()
     try:
         for unit in units:
+            location = unit.location
+            if not location.is_on_map():
+                continue
             type = unit.unit_type
             d = random.choice(directions)
             if type == bc.UnitType.Worker:
@@ -47,14 +51,17 @@ while True:
                 d3 = random.choice(directions)
                 if gc.can_harvest(unit.id, d3):
                     gc.harvest(unit.id, d3)
-                location = unit.location
-                if location.is_on_map():
-                    nearby = gc.sense_nearby_units(location.map_location(), 2)
-                    for other in nearby:
-                        if gc.can_build(unit.id, other.id):
-                            gc.build(unit.id, other.id)
+                nearby = gc.sense_nearby_units(location.map_location(), 2)
+                for other in nearby:
+                    if gc.can_build(unit.id, other.id):
+                        gc.build(unit.id, other.id)
+                #d4 = random.choice(directions)
+                #gc.move_robot(unit.id, d4)
             elif type == bc.UnitType.Rocket:
                 if not unit.rocket_is_used() and unit.structure_is_built():
+                    nearby_units = gc.sense_nearby_units(location.map_location(), 1)
+                    if len(nearby_units) > 0:
+                        gc.load(unit.id, nearby_units[0].id)
                     destination = get_random_mars_position()
                     gc.launch_rocket(unit.id, destination)
     except Exception as e:
